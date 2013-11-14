@@ -6,7 +6,7 @@
 *   - inlezen van Nummers.txt bestand;
 *   - functies en datastructuren uit hoorcollege #1 IPC015:
 *   - sorteer-algoritmen insertion_sort, selection_sort, bubble_sort
-*     (gebaseerd op arrays)
+*     (gebaseerd op MuziekDBs)
 *   - main die Nummers.txt inleest en een sorteer-algoritme aanroept.
 **********************************************************************/
 #include <iostream>
@@ -21,7 +21,7 @@ using namespace std;
 
 
 /*********************************************************************
-*   MuziekDB type definities en globale array liedjes:
+*   MuziekDB type definities en globale vector <El>& MuziekDB:
 **********************************************************************/
 struct Length
 {
@@ -40,10 +40,8 @@ struct Track
 	string country;                         // land van artiest
 };
 
-const int MAX_AANTAL_LIEDJES = 5000;
 typedef Track El ;
-typedef Track MuziekDB [MAX_AANTAL_LIEDJES];
-MuziekDB liedjes;
+vector <El> MuziekDB;
 
 /************************************************************************
 *   Ordenings-relaties op Track:
@@ -100,8 +98,9 @@ ostream& operator<< (ostream& out, const Length lengte)
     return out ;
 }
 
-istream& operator>> (istream& infile, Track& track)
+void laad_in (istream& infile, vector <El>& MuziekDB)
 {
+    Track track;
     string dummy;
     getline(infile,track.artist);       // artist
     getline(infile,track.cd);           // cd
@@ -115,7 +114,7 @@ istream& operator>> (istream& infile, Track& track)
     getline(infile, dummy) ;            // verwijder t/m newline
     getline(infile,track.country);      // country
     getline(infile, dummy) ;            // verwijder t/m newline
-    return infile ;
+    MuziekDB.push_back(track);
 }
 
 ostream& operator<< (ostream& out, const Track track)
@@ -124,14 +123,13 @@ ostream& operator<< (ostream& out, const Track track)
     return out ;
 }
 
-int lees_liedjes(ifstream& infile, MuziekDB liedjes)
+int lees_liedjes(ifstream& infile, vector <El>& MuziekDB)
 {
-    int aantal_ingelezen_liedjes = 0 ;
     do {
-        infile >> liedjes[aantal_ingelezen_liedjes++] ;
+        laad_in(infile, MuziekDB) ;
     }
-    while (infile && aantal_ingelezen_liedjes < MAX_AANTAL_LIEDJES);
-    return aantal_ingelezen_liedjes ;
+    while (infile);
+    return MuziekDB.size() ;
 }
 
 int lees_bestand (string bestandnaam)
@@ -143,15 +141,15 @@ int lees_bestand (string bestandnaam)
         return -1;
     }
     cout << "Lees '" << bestandnaam << "' in." << endl;
-	int aantal = lees_liedjes (nummersDBS, liedjes);
+	int aantal = lees_liedjes (nummersDBS, MuziekDB);
 	nummersDBS.close();
 	return aantal;
 }
 
-void toon_MuziekDB (MuziekDB liedjes, int aantalLiedjes)
+void toon_MuziekDB (vector <El>& MuziekDB, int aantalLiedjes)
 {
     for (int i = 0 ; i < aantalLiedjes; i++)
-        cout << i+1 << ". " << liedjes[i] << endl ;
+        cout << i+1 << ". " << MuziekDB[i] << endl ;
 }
 
 /************************************************************************
@@ -176,118 +174,118 @@ bool valid_slice (Slice s)
 	return 0 <= s.from && s.from <= s.to ;
 }
 
-bool is_sorted (El array [], Slice s)
+bool is_sorted (vector <El>& MuziekDB, Slice s)
 {
 //	pre-condition:
-	assert (valid_slice(s)) ;	// ...and s.to < size of array
+	assert (valid_slice(s)) ;	// ...and s.to < size of MuziekDB
 //	post-condition:
-//	result is true if	array[s.from]   <= array[s.from+1]
-//						array[s.from+1] <= array[s.from+2]
+//	result is true if	MuziekDB[s.from]   <= MuziekDB[s.from+1]
+//						MuziekDB[s.from+1] <= MuziekDB[s.from+2]
 //						...
-//						array[s.to-1]   <= array[s.to]
+//						MuziekDB[s.to-1]   <= MuziekDB[s.to]
 	bool sorted = true ;
 	for (int i = s.from; i < s.to && sorted; i++)
-		if (array[i] > array[i+1])
+		if (MuziekDB[i] > MuziekDB[i+1])
 			sorted = false ;
 	return sorted ;
 }
 
-int find_position ( El array [], Slice s, El y )
+int find_position ( vector <El>& MuziekDB, Slice s, El y )
 {
 //	pre-condition:
-	assert (valid_slice(s) && is_sorted(array,s)) ;    // ...and s.to < size of array
+	assert (valid_slice(s) && is_sorted(MuziekDB,s)) ;    // ...and s.to < size of MuziekDB
 //	post-condition: s.from <= result <= s.to+1
 	for ( int i = s.from ; i <= s.to ; i++ )
-		if ( y <= array [i] )
+		if ( y <= MuziekDB [i] )
 			return i ;
 	return s.to+1;
 }
 
-void shift_right ( El array [], Slice s )
+void shift_right ( vector <El>& MuziekDB, Slice s )
 {
 //	pre-condition:
-	assert (valid_slice (s)) ;	// ... and s.to < size (array) - 1
-//	post-condition:  array[s.from+1]	= 	old array[s.from]
-//			    	 array[s.from+2]	= 	old array[s.from+1]
+	assert (valid_slice (s)) ;	// ... and s.to < size (MuziekDB) - 1
+//	post-condition:  MuziekDB[s.from+1]	= 	old MuziekDB[s.from]
+//			    	 MuziekDB[s.from+2]	= 	old MuziekDB[s.from+1]
 //						...
-//			    	 array[s.to+1]		= 	old array[s.to]
+//			    	 MuziekDB[s.to+1]		= 	old MuziekDB[s.to]
 	for ( int i = s.to+1 ; i > s.from ; i-- )
-		array [i]  = array [i-1] ;
+		MuziekDB [i]  = MuziekDB [i-1] ;
 }
 
-void insert ( El array [], int& length, El y )
+void insert ( vector <El>& MuziekDB, int& length, El y )
 {
-	const int pos = find_position (array, mkSlice (0, length-1), y) ;
+	const int pos = find_position (MuziekDB, mkSlice (0, length-1), y) ;
 	if (pos < length)
-		shift_right ( array, mkSlice (pos, length-1) ) ;
-	array [pos] = y ;
+		shift_right ( MuziekDB, mkSlice (pos, length-1) ) ;
+	MuziekDB [pos] = y ;
 	length++;
 }
 
-void swap (El array [], int  i, int  j )
+void swap (vector <El>& MuziekDB, int  i, int  j )
 {
 //	pre-condition:
-	assert ( i >= 0 && j >= 0 ) ;	// ... and i < size of array
-						            // ... and j < size of array
-// Post-condition: array[i] = old array[j] and array[j] = old array[i]
-	const El help = array [i];
-	array [i] = array [j] ;
-	array [j] = help;
+	assert ( i >= 0 && j >= 0 ) ;	// ... and i < size of MuziekDB
+						            // ... and j < size of MuziekDB
+// Post-condition: MuziekDB[i] = old MuziekDB[j] and MuziekDB[j] = old MuziekDB[i]
+	const El help = MuziekDB [i];
+	MuziekDB [i] = MuziekDB [j] ;
+	MuziekDB [j] = help;
 }
 
 /************************************************************************
-*   array-based sorteer-algoritmen uit hoorcollege #1 IPC015:
+*   MuziekDB-based sorteer-algoritmen uit hoorcollege #1 IPC015:
 ************************************************************************/
-//	array-based insertion sort:
-void insertion_sort ( El array [], int length )
+//	MuziekDB-based insertion sort:
+void insertion_sort ( vector <El>& MuziekDB, int length )
 {
 	int sorted = 1 ;
     while ( sorted < length )
-    {   insert ( array, sorted, array[sorted] ) ;
+    {   insert ( MuziekDB, sorted, MuziekDB[sorted] ) ;
     }
 }
 
-//	array-based selection sort:
-int smallest_value_at ( El array [], Slice s )
+//	MuziekDB-based selection sort:
+int smallest_value_at ( vector <El>& MuziekDB, Slice s )
 {
 //	pre-condition:
 	assert (valid_slice (s)) ;	// ... and s.to < size (s)
-//	Post-condition: s.from <= result <= s.to and array[result] is
-//	the minimum value of array[s.from] .. array[s.to]
+//	Post-condition: s.from <= result <= s.to and MuziekDB[result] is
+//	the minimum value of MuziekDB[s.from] .. MuziekDB[s.to]
 	int  smallest_at = s.from ;
 	for ( int index = s.from+1 ; index <= s.to ; index++ )
-		if ( array [index] < array [smallest_at] )
+		if ( MuziekDB [index] < MuziekDB [smallest_at] )
 			smallest_at = index ;
 	return smallest_at ;
 }
 
-void selection_sort ( El array [], int length )
+void selection_sort ( vector <El>& MuziekDB, int length )
 {	for ( int unsorted = 0 ; unsorted < length ; unsorted++ )
-	{   const int k = smallest_value_at (array, mkSlice (unsorted, length-1));
-	    swap ( array, unsorted, k ) ;
+	{   const int k = smallest_value_at (MuziekDB, mkSlice (unsorted, length-1));
+	    swap ( MuziekDB, unsorted, k ) ;
 	}
 }
 
-//	array-based bubble sort:
-bool bubble ( El array [], Slice s )
+//	MuziekDB-based bubble sort:
+bool bubble ( vector <El>& MuziekDB, Slice s )
 {
 //	pre-condition:
-	assert (valid_slice(s));	// ... and s.to < size(array)
+	assert (valid_slice(s));	// ... and s.to < size(MuziekDB)
 //	Post-condition:
-//	maximum of array[s.from]..array[s.to] is at array[s.to]
-//	if result is true then sorted( array, s )
+//	maximum of MuziekDB[s.from]..MuziekDB[s.to] is at MuziekDB[s.to]
+//	if result is true then sorted( MuziekDB, s )
 	bool is_sorted = true ;
 	for ( int i = s.from ; i < s.to ; i++)
-	    if ( array [i] > array [i+1])
-		{	swap ( array, i, i+1 ) ;
+	    if ( MuziekDB [i] > MuziekDB [i+1])
+		{	swap ( MuziekDB, i, i+1 ) ;
 			is_sorted = false ;
 		}
 	return is_sorted ;
 }
 
-void bubble_sort ( El array [], int length )
+void bubble_sort ( vector <El>& MuziekDB, int length )
 {
-    while ( !bubble ( array, mkSlice (0, length-1 ) ) )
+    while ( !bubble ( MuziekDB, mkSlice (0, length-1 ) ) )
         length-- ;
 }
 
@@ -324,12 +322,12 @@ int main()
     cout << "Sorteren bestand met " << sorteermethode[m] << " sort" << endl;
     switch (m)
     {
-        case Insertion: insertion_sort(liedjes,aantalLiedjes) ; break ;
-        case Selection: selection_sort(liedjes,aantalLiedjes) ; break ;
-        case Bubble:    bubble_sort   (liedjes,aantalLiedjes) ; break ;
+        case Insertion: insertion_sort(MuziekDB,aantalLiedjes) ; break ;
+        case Selection: selection_sort(MuziekDB,aantalLiedjes) ; break ;
+        case Bubble:    bubble_sort   (MuziekDB,aantalLiedjes) ; break ;
         default:        cout << "Huh?" << endl ;
     }
     cout << "Bestand gesorteerd." << endl;
-    toon_MuziekDB (liedjes,aantalLiedjes) ;
+    toon_MuziekDB (MuziekDB,aantalLiedjes) ;
 	return 0;
 }

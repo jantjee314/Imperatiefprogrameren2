@@ -1,7 +1,8 @@
 #################
 ## Eclipse
 #################
-
+*.layout
+*.depend
 *.pydevproject
 .project
 .metadata
