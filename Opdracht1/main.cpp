@@ -16,7 +16,7 @@
 #include <cstring>
 #include <vector>
 #include <cassert>
-
+#define NDEBUG
 using namespace std;
 
 
@@ -39,10 +39,10 @@ struct Track
 	Length time;							// lengte van track
 	string country;                         // land van artiest
 };
-
+bool SORT_BY_TIME = true;
 typedef Track El ;
 vector <El> MuziekDB;
-
+int count_comparisons = 0;
 /************************************************************************
 *   Ordenings-relaties op Track:
 *      definieer zelf < en == voor Length en Track, dan volgen
@@ -50,12 +50,41 @@ vector <El> MuziekDB;
 ************************************************************************/
 bool operator<(const Track& a, const Track& b)
 {
-    return a.artist < b.artist ;    /*implementeer een correcte <  ordening op Track waarden */
+	count_comparisons ++;
+	if(SORT_BY_TIME)
+	{
+		if(a.time.minutes == b.time.minutes)
+		{
+			return a.time.seconds < b.time.seconds;
+		}
+		return a.time.minutes < b.time.minutes;
+	}
+	else
+	{
+		if(a.artist == b.artist)
+		{
+			if(a.cd == b.cd)
+			{
+				if(a.year == b.year)
+				{
+					return a.track < b.track;
+				}
+				return a.year < b.year;
+			}
+			return a.cd < b.cd;
+		}
+		return a.artist < b.artist;
+	}
 }
 
 bool operator==(const Track& a, const Track& b)
 {
-    return a.artist == b.artist ;   /* implementeer een correcte == ordening op Track waarden */
+	count_comparisons ++;
+	if(SORT_BY_TIME)
+	{
+		return (a.time.minutes == b.time.minutes && a.time.seconds == b.time.seconds);
+	}
+    return (a.artist == b.artist && a.title == b.title && a.year == b.year && a.track == b.track);
 }
 
 //	afgeleide ordeningen of Track waarden:
