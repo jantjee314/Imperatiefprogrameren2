@@ -358,5 +358,6 @@ int main()
     }
     cout << "Bestand gesorteerd." << endl;
     toon_MuziekDB (MuziekDB,aantalLiedjes) ;
+    cout << count_comparisons << endl;
 	return 0;
 }
