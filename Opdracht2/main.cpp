@@ -43,6 +43,28 @@ int remove_dup (vector<char>& source, vector<char>& dest)
     return nr_of_comparisons ;
 }
 
+int remove_sort_dup (vector<char>& source, vector<char>& dest)
+{// pre-condition:
+ assert (size (dest) == 0 && is_sorted (source)) ;
+// post-condition: dest is a copy of source without duplicate elements
+// result is the number of comparisons performed in this function
+    for(int i = 0 ; i < size(source); i++)
+    {
+        if(i>0)
+        {
+            if(source[i] != source[i-1])
+            {
+                dest.push_back(sourche[i]);
+            }
+        }
+        else
+        {
+            dest.push_back(source[i]);
+        }
+    }
+}
+
+
 void fill (string txt, vector<char>& r)
 {// pre-condition:
     assert (size(r) == 0) ;
