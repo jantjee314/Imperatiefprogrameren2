@@ -5,7 +5,9 @@
 #include <cassert>
 
 using namespace std;
-
+/**
+JJan Martens s4348435 en Rick Schouten s4323750
+*/
 // data structures:
 const int width  = 4;                    // width  > 0
 const int height = 4;                    // height > 0
@@ -512,8 +514,70 @@ int enter_max_depth ()
     return max_depth ;
 }
 
+/*Knapsack gedeelte */
+int max_val(int value[], int aantal_items)
+{
+	int high = value[0];
+	for(int i=1; i < aantal_items; i++)
+	{
+		if(value[i] > high)
+			high = value[i];
+	}
+	return high;
+}
+
+int most_value_naive(int capacity, int weight[], int value[], int aantal_items)
+{//Precondition:
+	assert(aantal_items > 0);
+	if(capacity < 0)
+		return -1;
+	if(capacity == 0)
+		return 0;
+	else
+	{
+		int values [aantal_items];
+		for(int i = 0; i < aantal_items; i++)
+		{
+			if(weight[i] > capacity)
+			{
+				values[i] = 0;
+			}
+			else
+			{
+				values[i] = value[i] + most_value_naive(capacity - weight[i], weight, value, aantal_items);
+			}
+		}
+		return max_val(values, aantal_items);
+	}
+}
+
+int mv( int capacity, int weight[], int value[], int aantal_items )
+{// Pre-condition:
+    assert (capacity >= 0);
+    /*Postcondition: Maak een array voor elke weight vanaf 0 opgebouwd waarin het 'laatste item'  de hoogste te behalen value inhoudt*/
+    int solutions[aantal_items+1][capacity+1];
+    for(int p = 0; p<=aantal_items; p++ )
+    {
+        for(int q=0; q <= capacity ; q++ )
+        {
+            if( p == 0 || q == 0 )
+                solutions[p][q] = 0;
+            else if( weight[p-1] <= q)
+                solutions[p][q] = max(value[p-1] + solutions[p-1][q-weight[p-1]], solutions[p-1][q]);
+            else
+                solutions[p][q] = solutions[p-1][q];
+        }
+    }
+    return solutions[aantal_items][capacity];
+}
 int main ()
 {
+    int weight[] = {3,4,8,11};
+    int value[] = {2,3,13,1000};
+    cout << most_value_naive(11,weight,value,3) << endl;
+    return 0;
+
+    /*
     show_puzzle (challenge);
     if (!puzzle_has_solution (challenge))
         cout << "This puzzle has no solution at all." << endl ;
@@ -527,5 +591,5 @@ int main ()
         cout << endl << "final nr_of_solve_calls = " << nr_of_solve_calls << ", final max_vector_size = " << max_vector_size << endl ;
         system("PAUSE");
         return EXIT_SUCCESS;
-    }
+    }*/
 }
